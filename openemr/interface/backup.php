@@ -114,7 +114,7 @@ $GLOBALS['PATIENT_REPORT_ACTIVE'] = true;
 $PDF_OUTPUT = empty($_POST['pdf']) ? 0 : intval($_POST['pdf']);
 
 if ($PDF_OUTPUT) {
-  require_once("$srcdir/html2pdf/html2pdf.class.php");
+  require_once("$srcdir/html2pdf4/vendor/autoload.php");
   $pdf = new HTML2PDF ($GLOBALS['pdf_layout'],
                        $GLOBALS['pdf_size'],
                        $GLOBALS['pdf_language'],
@@ -125,7 +125,7 @@ if ($PDF_OUTPUT) {
                       );
   //set 'dejavusans' for now. which is supported by a lot of languages - http://dejavu-fonts.org/wiki/Main_Page
   //TODO: can have this selected as setting in globals after we have more experience with this to fully support internationalization.
-  #$pdf->setDefaultFont('dejavusans');
+  $pdf->setDefaultFont('dejavusans');
 
   ob_start();
 }
@@ -519,7 +519,13 @@ foreach ($ar as $key => $val) {
             $content = getContent();
             // $pdf->setDefaultFont('Arial');
             $pdf->writeHTML($content, false);
-            $pagecount = $pdf->pdf->setSourceFile($from_file);
+	    try{
+             $pagecount = $pdf->pdf->setSourceFile($from_file);
+	    }catch(Exception $e){
+	     exec("$srcdir/ghostscript-9.19-linux-x86_64/gs-919-linux_x86_64 -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=".dirname($from_file)."/new_file.pdf ".$from_file);
+	     exec("mv ".dirname($from_file)."/new_file.pdf ".$from_file);
+             $pagecount = $pdf->pdf->setSourceFile($from_file);
+	    }
             for($i = 0; $i < $pagecount; ++$i){
               $pdf->pdf->AddPage();  
               $itpl = $pdf->pdf->importPage($i + 1, '/MediaBox');
