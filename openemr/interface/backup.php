@@ -499,11 +499,9 @@ foreach ($ar as $key => $val) {
                     // OK to link to the image file because it will be accessed by the
                     // HTML2PDF parser and not the browser.
                     $from_rel = $web_root . substr($from_file, strlen($webserver_root));
-                    echo "<img src='$from_rel'";
                     // Flag images with excessive width for possible stylesheet action.
                     $asize = getimagesize($from_file);
-                    if ($asize[0] > 750) echo " class='bigimage'";
-                    echo " /><br><br>";
+		    echo "<img src='../sites/default/documents/".$pid."/$from_filename'".($asize[0] > 750 ? " class='bigimage'":'')." style='width:100%;height:100%;' /><br><br>";
                   }
                 }
                 else {
