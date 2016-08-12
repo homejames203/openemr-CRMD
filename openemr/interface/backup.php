@@ -1,5 +1,6 @@
 <?php
 ini_set('max_execution_time',600);
+ini_set("memory_limit","256M");
 require_once("globals.php");
 use ESign\Api;
 $s=sqlStatement("select pid from patient_data order by lname");
