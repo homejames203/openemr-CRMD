@@ -1,5 +1,5 @@
 <?php
-include_once("../../globals.php");
+require_once(dirname(__FILE__).'/../../globals.php');
 include_once($GLOBALS["srcdir"]."/api.inc");
 include_once ($GLOBALS['fileroot']."/library/patient.inc");
 

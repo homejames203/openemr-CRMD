@@ -27,7 +27,7 @@
  *  @author Ron Criswell <info@keyfocusmedia.com>
  * 
  *************************************************************************** */
-require_once("../../globals.php");
+require_once(dirname(__FILE__).'/../../globals.php');
 include_once("{$GLOBALS['srcdir']}/sql.inc");
 include_once("{$GLOBALS['srcdir']}/api.inc");
 include_once("{$GLOBALS['srcdir']}/wmt/wmt.class.php");

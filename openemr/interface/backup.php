@@ -1,4 +1,5 @@
 <?php
+ini_set('max_execution_time',600);
 require_once("globals.php");
 use ESign\Api;
 $s=sqlStatement("select pid from patient_data order by lname");
@@ -517,13 +518,15 @@ foreach ($ar as $key => $val) {
             // HTML to PDF conversion will fail if there are open tags.
             echo "</div></div>\n";
             $content = getContent();
-            // $pdf->setDefaultFont('Arial');
-            $pdf->writeHTML($content, false);
+            $tidy = new tidy();
+            $tidy->parseString($content,array('show-body-only'=>true),'utf8');
+            $tidy->cleanRepair();
+            $pdf->writeHTML($tidy, false);
 	    try{
              $pagecount = $pdf->pdf->setSourceFile($from_file);
 	    }catch(Exception $e){
-	     exec("$srcdir/ghostscript-9.19-linux-x86_64/gs-919-linux_x86_64 -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=".dirname($from_file)."/new_file.pdf ".$from_file);
-	     exec("mv ".dirname($from_file)."/new_file.pdf ".$from_file);
+	     exec("$srcdir/ghostscript-9.19-linux-x86_64/gs-919-linux_x86_64 -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=".dirname($from_file)."/new_file.pdf ".str_replace(" ","\ ",$from_file));
+	     exec("mv ".dirname($from_file)."/new_file.pdf ".str_replace(" ","\ ",$from_file));
              $pagecount = $pdf->pdf->setSourceFile($from_file);
 	    }
             for($i = 0; $i < $pagecount; ++$i){
@@ -698,7 +701,10 @@ if ($PDF_OUTPUT)
  {
   $content = getContent();
   // $pdf->setDefaultFont('Arial');
-  $pdf->writeHTML($content, false);
+  $tidy = new tidy();
+  $tidy->parseString($content,array('show-body-only'=>true),'utf8');
+  $tidy->cleanRepair();
+  $pdf->writeHTML($tidy, false);
   if($PDF_OUTPUT == 1)
   $pdf->Output("../backup/$pid.pdf",'F'); // D = Download, I = Inline
  }

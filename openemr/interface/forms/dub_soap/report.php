@@ -4,7 +4,7 @@
  */
 
 /* for $GLOBALS[], ?? */
-require_once('../../globals.php');
+require_once(dirname(__FILE__).'/../../globals.php');
 /* for acl_check(), ?? */
 require_once($GLOBALS['srcdir'].'/api.inc');
 /* for generate_form_field, ?? */
