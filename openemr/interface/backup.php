@@ -260,10 +260,6 @@ while($result = sqlFetchArray($inclookupres)) {
                 echo "   </table>\n";
             }
             echo "</div>";
-	//employer
-               print "<br><span style='font-weight:bold;font-size:25px;'>".xl('Employer Data').":</span><br>";
-               printRecDataOne($employer_data_array, getRecEmployerData ($pid), $N);
-	       echo "<br/>";
 	//allergies
             print "<span style='font-weight:bold;font-size:25px;'>Patient Allergies:</span><br>";
             printListData($pid, "allergy", "1");
@@ -306,81 +302,79 @@ while($result = sqlFetchArray($inclookupres)) {
                   echo "<br>\n";
                 }
                 echo "</div>\n";
-	//batchcom
-            echo "<hr />";
-            echo "<div class='text transactions'>\n";
-            print "<h1>".xl('Patient Communication sent').":</h1>";
-            $sql="SELECT concat( 'Messsage Type: ', batchcom.msg_type, ', Message Subject: ', batchcom.msg_subject, ', Sent on:', batchcom.msg_date_sent ) AS batchcom_data, batchcom.msg_text, concat( users.fname, users.lname ) AS user_name FROM `batchcom` JOIN `users` ON users.id = batchcom.sent_by WHERE batchcom.patient_id='$pid'";
-            // echo $sql;
-            $result = sqlStatement($sql);
-            while ($row=sqlFetchArray($result)) {
-                echo $row{'batchcom_data'}.", By: ".$row{'user_name'}."<br>Text:<br> ".$row{'msg_txt'}."<br>\n";
-            }
-            echo "</div>\n";
-	//notes
-            echo "<hr />";
-            echo "<div class='text notes'>\n";
-            print "<h1>".xl('Patient Notes').":</h1>";
-            printPatientNotes($pid);
-            echo "</div>";
-	//transactions
-            echo "<hr />";
-            echo "<div class='text transactions'>\n";
-            print "<h1>".xl('Patient Transactions').":</h1>";
-            printPatientTransactions($pid);
-            echo "</div>";
-	//insurance
-            echo "<hr />";
-            echo "<div class='text insurance'>";
-            echo "<h1>".xl('Insurance Data').":</h1>";
-            print "<br><span class=bold>".xl('Primary Insurance Data').":</span><br>";
-            printRecDataOne($insurance_data_array, getRecInsuranceData ($pid,"primary"), $N);		
-            print "<span class=bold>".xl('Secondary Insurance Data').":</span><br>";	
-            printRecDataOne($insurance_data_array, getRecInsuranceData ($pid,"secondary"), $N);
-            print "<span class=bold>".xl('Tertiary Insurance Data').":</span><br>";
-            printRecDataOne($insurance_data_array, getRecInsuranceData ($pid,"tertiary"), $N);
-            echo "</div>";
-	//billing
-            echo "<hr />";
-            echo "<div class='text billing'>";
-            print "<h1>".xl('Billing Information').":</h1>";
-            if (count($ar['newpatient']) > 0) {
-                $billings = array();
-                echo "<table>";
-                echo "<tr><td width='400' class='bold'>Code</td><td class='bold'>".xl('Fee')."</td></tr>\n";
-                $total = 0.00;
-                $copays = 0.00;
-                foreach ($ar['newpatient'] as $be) {
-                    $ta = explode(":",$be);
-                    $billing = getPatientBillingEncounter($pid,$ta[1]);
-                    $billings[] = $billing;
-                    foreach ($billing as $b) {
-                        echo "<tr>\n";
-                        echo "<td class=text>";
-                        echo $b['code_type'] . ":\t" . $b['code'] . "&nbsp;". $b['modifier'] . "&nbsp;&nbsp;&nbsp;" . $b['code_text'] . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-                        echo "</td>\n";
-                        echo "<td class=text>";
-                        echo oeFormatMoney($b['fee']);
-                        echo "</td>\n";
-                        echo "</tr>\n";
-                        $total += $b['fee'];
-                        if ($b['code_type'] == "COPAY") {
-                            $copays += $b['fee'];
-                        }
+	//encounter forms
+            // we have an "encounter form" form field whose name is like
+            // dirname_formid, with a value which is the encounter ID.
+            //
+            // display encounter forms, encoded as a POST variable
+            // in the format: <formdirname_formid>=<encounterID>
+	   foreach ($ar as $key => $val){
+	    if($key=='documents'||$key=='pdf'||$key=='demographics'||$key=='history'||$key=='insurance'||$key=='billing'||$key=='allergies'||$key=='medications'||$key=='medical_problems'||$key=='immunizations'||$key=='batchcom'||$key=='notes'||$key=='transactions'||$key=='procedures'||strpos($key, "issue_")=== 0)
+	    continue;
+            if (($auth_notes_a || $auth_notes || $auth_coding_a || $auth_coding || $auth_med || $auth_relaxed)) {
+                $form_encounter = $val;
+                preg_match('/^(.*)_(\d+)$/', $key, $res);
+                $form_id = $res[2];
+                $formres = getFormNameByFormdirAndFormid($res[1],$form_id);
+                $dateres = getEncounterDateByEncounter($form_encounter);
+                $formId = getFormIdByFormdirAndFormid($res[1], $form_id);
+
+                if ($res[1] == 'newpatient') {
+                    echo "<div class='text encounter'>\n";
+                    echo "<h1>" . xl($formres["form_name"]) . "</h1>";
+                }
+                else {
+                    echo "<div class='text encounter_form'>";
+                    echo "<h1>" . xl_form_title($formres["form_name"]) . "</h1>";
+                }
+
+                // show the encounter's date
+                echo "(" . oeFormatSDFT(strtotime($dateres["date"])) . ") ";
+                if ($res[1] == 'newpatient') {
+                    // display the provider info
+                    echo ' '. xl('Provider') . ': ' . text(getProviderName(getProviderIdOfEncounter($form_encounter)));
+                }
+                echo "<br>\n";
+   
+                // call the report function for the form
+                ?>                
+                <div name="search_div" id="search_div_<?php echo attr($form_id)?>_<?php echo attr($res[1])?>" class="report_search_div class_<?php echo attr($res[1]); ?>">
+                <?php
+                if (substr($res[1],0,3) == 'LBF')
+                  call_user_func("lbf_report", $pid, $form_encounter, $N, $form_id, $res[1]);
+                else
+                  call_user_func($res[1] . "_report", $pid, $form_encounter, $N, $form_id);
+                
+                $esign = $esignApi->createFormESign( $formId, $res[1], $form_encounter );
+                if ( $esign->isLogViewable("report") ) {
+                    $esign->renderLog();
+                }
+                ?>
+                
+                </div>
+                <?php
+
+                if ($res[1] == 'newpatient') {
+                    // display billing info
+                    $bres = sqlStatement("SELECT b.date, b.code, b.code_text " .
+                      "FROM billing AS b, code_types AS ct WHERE " .
+                      "b.pid = ? AND " .
+                      "b.encounter = ? AND " .
+                      "b.activity = 1 AND " .
+                      "b.code_type = ct.ct_key AND " .
+                      "ct.ct_diag = 0 " .
+                      "ORDER BY b.date",
+                      array($pid, $form_encounter));
+                    while ($brow=sqlFetchArray($bres)) {
+                        echo "<span class='bold'>&nbsp;".xl('Procedure').": </span><span class='text'>" .
+                            $brow['code'] . " " . $brow['code_text'] . "</span><br>\n";
                     }
                 }
-                echo "<tr><td>&nbsp;</td></tr>";
-                echo "<tr><td class=bold>".xl('Sub-Total')."</td><td class=text>" . oeFormatMoney($total + abs($copays)) . "</td></tr>";
-                echo "<tr><td class=bold>".xl('Paid')."</td><td class=text>" . oeFormatMoney(abs($copays)) . "</td></tr>";
-                echo "<tr><td class=bold>".xl('Total')."</td><td class=text>" . oeFormatMoney($total) . "</td></tr>";
-                echo "</table>";
-                echo "<pre>";
-                //print_r($billings);
-                echo "</pre>";
-            } else {
-                printPatientBilling($pid);
-            }
-            echo "</div>\n"; // end of billing DIV
+
+                print "</div>";
+            
+            } // end auth-check for encounter forms
+	   }
 	//documents
             echo "<hr />";
             echo "<div class='text documents'>";
@@ -572,79 +566,85 @@ while($result = sqlFetchArray($inclookupres)) {
 
             echo "</div>\n"; //end the issue DIV
 
-	//encounter forms
-            // we have an "encounter form" form field whose name is like
-            // dirname_formid, with a value which is the encounter ID.
-            //
-            // display encounter forms, encoded as a POST variable
-            // in the format: <formdirname_formid>=<encounterID>
-	   foreach ($ar as $key => $val){
-	    if($key=='documents'||$key=='pdf'||$key=='demographics'||$key=='history'||$key=='insurance'||$key=='billing'||$key=='allergies'||$key=='medications'||$key=='medical_problems'||$key=='immunizations'||$key=='batchcom'||$key=='notes'||$key=='transactions'||$key=='procedures'||strpos($key, "issue_")=== 0)
-	    continue;
-            if (($auth_notes_a || $auth_notes || $auth_coding_a || $auth_coding || $auth_med || $auth_relaxed)) {
-                $form_encounter = $val;
-                preg_match('/^(.*)_(\d+)$/', $key, $res);
-                $form_id = $res[2];
-                $formres = getFormNameByFormdirAndFormid($res[1],$form_id);
-                $dateres = getEncounterDateByEncounter($form_encounter);
-                $formId = getFormIdByFormdirAndFormid($res[1], $form_id);
-
-                if ($res[1] == 'newpatient') {
-                    echo "<div class='text encounter'>\n";
-                    echo "<h1>" . xl($formres["form_name"]) . "</h1>";
-                }
-                else {
-                    echo "<div class='text encounter_form'>";
-                    echo "<h1>" . xl_form_title($formres["form_name"]) . "</h1>";
-                }
-
-                // show the encounter's date
-                echo "(" . oeFormatSDFT(strtotime($dateres["date"])) . ") ";
-                if ($res[1] == 'newpatient') {
-                    // display the provider info
-                    echo ' '. xl('Provider') . ': ' . text(getProviderName(getProviderIdOfEncounter($form_encounter)));
-                }
-                echo "<br>\n";
-   
-                // call the report function for the form
-                ?>                
-                <div name="search_div" id="search_div_<?php echo attr($form_id)?>_<?php echo attr($res[1])?>" class="report_search_div class_<?php echo attr($res[1]); ?>">
-                <?php
-                if (substr($res[1],0,3) == 'LBF')
-                  call_user_func("lbf_report", $pid, $form_encounter, $N, $form_id, $res[1]);
-                else
-                  call_user_func($res[1] . "_report", $pid, $form_encounter, $N, $form_id);
-                
-                $esign = $esignApi->createFormESign( $formId, $res[1], $form_encounter );
-                if ( $esign->isLogViewable("report") ) {
-                    $esign->renderLog();
-                }
-                ?>
-                
-                </div>
-                <?php
-
-                if ($res[1] == 'newpatient') {
-                    // display billing info
-                    $bres = sqlStatement("SELECT b.date, b.code, b.code_text " .
-                      "FROM billing AS b, code_types AS ct WHERE " .
-                      "b.pid = ? AND " .
-                      "b.encounter = ? AND " .
-                      "b.activity = 1 AND " .
-                      "b.code_type = ct.ct_key AND " .
-                      "ct.ct_diag = 0 " .
-                      "ORDER BY b.date",
-                      array($pid, $form_encounter));
-                    while ($brow=sqlFetchArray($bres)) {
-                        echo "<span class='bold'>&nbsp;".xl('Procedure').": </span><span class='text'>" .
-                            $brow['code'] . " " . $brow['code_text'] . "</span><br>\n";
+	//insurance
+            echo "<hr />";
+            echo "<div class='text insurance'>";
+            echo "<h1>".xl('Insurance Data').":</h1>";
+            print "<br><span class=bold>".xl('Primary Insurance Data').":</span><br>";
+            printRecDataOne($insurance_data_array, getRecInsuranceData ($pid,"primary"), $N);		
+            print "<span class=bold>".xl('Secondary Insurance Data').":</span><br>";	
+            printRecDataOne($insurance_data_array, getRecInsuranceData ($pid,"secondary"), $N);
+            print "<span class=bold>".xl('Tertiary Insurance Data').":</span><br>";
+            printRecDataOne($insurance_data_array, getRecInsuranceData ($pid,"tertiary"), $N);
+            echo "</div>";
+	//billing
+            echo "<hr />";
+            echo "<div class='text billing'>";
+            print "<h1>".xl('Billing Information').":</h1>";
+            if (count($ar['newpatient']) > 0) {
+                $billings = array();
+                echo "<table>";
+                echo "<tr><td width='400' class='bold'>Code</td><td class='bold'>".xl('Fee')."</td></tr>\n";
+                $total = 0.00;
+                $copays = 0.00;
+                foreach ($ar['newpatient'] as $be) {
+                    $ta = explode(":",$be);
+                    $billing = getPatientBillingEncounter($pid,$ta[1]);
+                    $billings[] = $billing;
+                    foreach ($billing as $b) {
+                        echo "<tr>\n";
+                        echo "<td class=text>";
+                        echo $b['code_type'] . ":\t" . $b['code'] . "&nbsp;". $b['modifier'] . "&nbsp;&nbsp;&nbsp;" . $b['code_text'] . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+                        echo "</td>\n";
+                        echo "<td class=text>";
+                        echo oeFormatMoney($b['fee']);
+                        echo "</td>\n";
+                        echo "</tr>\n";
+                        $total += $b['fee'];
+                        if ($b['code_type'] == "COPAY") {
+                            $copays += $b['fee'];
+                        }
                     }
                 }
-
-                print "</div>";
-            
-            } // end auth-check for encounter forms
-	}
+                echo "<tr><td>&nbsp;</td></tr>";
+                echo "<tr><td class=bold>".xl('Sub-Total')."</td><td class=text>" . oeFormatMoney($total + abs($copays)) . "</td></tr>";
+                echo "<tr><td class=bold>".xl('Paid')."</td><td class=text>" . oeFormatMoney(abs($copays)) . "</td></tr>";
+                echo "<tr><td class=bold>".xl('Total')."</td><td class=text>" . oeFormatMoney($total) . "</td></tr>";
+                echo "</table>";
+                echo "<pre>";
+                //print_r($billings);
+                echo "</pre>";
+            } else {
+                printPatientBilling($pid);
+            }
+            echo "</div>\n"; // end of billing DIV
+	//employer
+               print "<br><span style='font-weight:bold;font-size:25px;'>".xl('Employer Data').":</span><br>";
+               printRecDataOne($employer_data_array, getRecEmployerData ($pid), $N);
+	       echo "<br/>";
+	//batchcom
+            echo "<hr />";
+            echo "<div class='text transactions'>\n";
+            print "<h1>".xl('Patient Communication sent').":</h1>";
+            $sql="SELECT concat( 'Messsage Type: ', batchcom.msg_type, ', Message Subject: ', batchcom.msg_subject, ', Sent on:', batchcom.msg_date_sent ) AS batchcom_data, batchcom.msg_text, concat( users.fname, users.lname ) AS user_name FROM `batchcom` JOIN `users` ON users.id = batchcom.sent_by WHERE batchcom.patient_id='$pid'";
+            // echo $sql;
+            $result = sqlStatement($sql);
+            while ($row=sqlFetchArray($result)) {
+                echo $row{'batchcom_data'}.", By: ".$row{'user_name'}."<br>Text:<br> ".$row{'msg_txt'}."<br>\n";
+            }
+            echo "</div>\n";
+	//notes
+            echo "<hr />";
+            echo "<div class='text notes'>\n";
+            print "<h1>".xl('Patient Notes').":</h1>";
+            printPatientNotes($pid);
+            echo "</div>";
+	//transactions
+            echo "<hr />";
+            echo "<div class='text transactions'>\n";
+            print "<h1>".xl('Patient Transactions').":</h1>";
+            printPatientTransactions($pid);
+            echo "</div>";
 
 if ($PDF_OUTPUT)
   echo "<br /><br />" . xl('Signature') . ": _______________________________<br />";
