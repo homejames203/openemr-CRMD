@@ -174,6 +174,9 @@ $first_issue = 1;
     border-bottom: solid thin #6D6D6D;
     padding:0% 2% 0% 2.5%;
   }
+  .bold{
+   font-weight:bold;
+  }
 </style>
 
 <div id="report_custom" style="width:100%;">  <!-- large outer DIV -->
@@ -234,17 +237,7 @@ while($result = sqlFetchArray($inclookupres)) {
     include_once($GLOBALS['incdir'] . "/forms/$formdir/report.php");
 }
 
-// For each form field from patient_report.php...
-//
-foreach ($ar as $key => $val) {
-    if ($key == 'pdf') continue;
-
-    // These are the top checkboxes (demographics, allergies, etc.).
-    //
-    if (stristr($key,"include_")) {
-
-        if ($val == "demographics") {
-            
+        //demographics
             echo "<hr />";
             echo "<div class='text demographics' id='DEM'>\n";
             print "<h1>".xl('Patient Data').":</h1>";
@@ -255,9 +248,7 @@ foreach ($ar as $key => $val) {
             display_layout_rows('DEM', $result1, $result2);
             echo "   </table>\n";
             echo "</div>\n";
-
-        } elseif ($val == "history") {
-
+	//history
             echo "<hr />";
             echo "<div class='text history' id='HIS'>\n";
             if (acl_check('patients', 'med')) {
@@ -269,12 +260,76 @@ foreach ($ar as $key => $val) {
                 echo "   </table>\n";
             }
             echo "</div>";
-
-        } elseif ($val == "employer") {
-               print "<br><span class='bold'>".xl('Employer Data').":</span><br>";
+	//employer
+               print "<br><span style='font-weight:bold;font-size:25px;'>".xl('Employer Data').":</span><br>";
                printRecDataOne($employer_data_array, getRecEmployerData ($pid), $N);
-        } elseif ($val == "insurance") {
-
+	       echo "<br/>";
+	//allergies
+            print "<span style='font-weight:bold;font-size:25px;'>Patient Allergies:</span><br>";
+            printListData($pid, "allergy", "1");
+	    echo "<br/>";
+	//medications
+            print "<span style='font-weight:bold;font-size:25px;'>Patient Medications:</span><br>";
+            printListData($pid, "medication", "1");
+	    echo "<br/>";
+	//medical problems
+            print "<span style='font-weight:bold;font-size:25px;'>Patient Medical Problems:</span><br>";
+            printListData($pid, "medical_problem", "1");
+	//immunizations
+                echo "<hr />";
+                echo "<div class='text immunizations'>\n";
+                print "<h1>".xl('Patient Immunization').":</h1>";
+                $sql = "select i1.immunization_id, i1.administered_date, substring(i1.note,1,20) as immunization_note, c.code_text_short ".
+                   " from immunizations i1 ".
+                   " left join code_types ct on ct.ct_key = 'CVX' ".
+                   " left join codes c on c.code_type = ct.ct_id AND i1.cvx_code = c.code ".
+                   " where i1.patient_id = '$pid' and i1.added_erroneously = 0 ".
+                   " order by administered_date desc";
+                $result = sqlStatement($sql);
+                while ($row=sqlFetchArray($result)) {
+                  // Figure out which name to use (ie. from cvx list or from the custom list)
+                  if ($GLOBALS['use_custom_immun_list']) {
+                     $vaccine_display = generate_display_field(array('data_type'=>'1','list_id'=>'immunizations'), $row['immunization_id']);
+                  }
+                  else {
+                     if (!empty($row['code_text_short'])) {
+                        $vaccine_display = htmlspecialchars( xl($row['code_text_short']), ENT_NOQUOTES);
+                     }
+                     else {
+                        $vaccine_display = generate_display_field(array('data_type'=>'1','list_id'=>'immunizations'), $row['immunization_id']);
+                     }
+                  }
+                  echo $row['administered_date'] . " - " . $vaccine_display;
+                  if ($row['immunization_note']) {
+                     echo " - " . $row['immunization_note'];
+                  }
+                  echo "<br>\n";
+                }
+                echo "</div>\n";
+	//batchcom
+            echo "<hr />";
+            echo "<div class='text transactions'>\n";
+            print "<h1>".xl('Patient Communication sent').":</h1>";
+            $sql="SELECT concat( 'Messsage Type: ', batchcom.msg_type, ', Message Subject: ', batchcom.msg_subject, ', Sent on:', batchcom.msg_date_sent ) AS batchcom_data, batchcom.msg_text, concat( users.fname, users.lname ) AS user_name FROM `batchcom` JOIN `users` ON users.id = batchcom.sent_by WHERE batchcom.patient_id='$pid'";
+            // echo $sql;
+            $result = sqlStatement($sql);
+            while ($row=sqlFetchArray($result)) {
+                echo $row{'batchcom_data'}.", By: ".$row{'user_name'}."<br>Text:<br> ".$row{'msg_txt'}."<br>\n";
+            }
+            echo "</div>\n";
+	//notes
+            echo "<hr />";
+            echo "<div class='text notes'>\n";
+            print "<h1>".xl('Patient Notes').":</h1>";
+            printPatientNotes($pid);
+            echo "</div>";
+	//transactions
+            echo "<hr />";
+            echo "<div class='text transactions'>\n";
+            print "<h1>".xl('Patient Transactions').":</h1>";
+            printPatientTransactions($pid);
+            echo "</div>";
+	//insurance
             echo "<hr />";
             echo "<div class='text insurance'>";
             echo "<h1>".xl('Insurance Data').":</h1>";
@@ -285,9 +340,7 @@ foreach ($ar as $key => $val) {
             print "<span class=bold>".xl('Tertiary Insurance Data').":</span><br>";
             printRecDataOne($insurance_data_array, getRecInsuranceData ($pid,"tertiary"), $N);
             echo "</div>";
-
-        } elseif ($val == "billing") {
-
+	//billing
             echo "<hr />";
             echo "<div class='text billing'>";
             print "<h1>".xl('Billing Information').":</h1>";
@@ -328,98 +381,13 @@ foreach ($ar as $key => $val) {
                 printPatientBilling($pid);
             }
             echo "</div>\n"; // end of billing DIV
-        } elseif ($val == "allergies") {
-
-            print "<span class=bold>Patient Allergies:</span><br>";
-            printListData($pid, "allergy", "1");
-
-        } elseif ($val == "medications") {
-
-            print "<span class=bold>Patient Medications:</span><br>";
-            printListData($pid, "medication", "1");
-
-        } elseif ($val == "medical_problems") {
-
-            print "<span class=bold>Patient Medical Problems:</span><br>";
-            printListData($pid, "medical_problem", "1");
-        } elseif ($val == "immunizations") {
-
-            if (acl_check('patients', 'med')) {
-                echo "<hr />";
-                echo "<div class='text immunizations'>\n";
-                print "<h1>".xl('Patient Immunization').":</h1>";
-                $sql = "select i1.immunization_id, i1.administered_date, substring(i1.note,1,20) as immunization_note, c.code_text_short ".
-                   " from immunizations i1 ".
-                   " left join code_types ct on ct.ct_key = 'CVX' ".
-                   " left join codes c on c.code_type = ct.ct_id AND i1.cvx_code = c.code ".
-                   " where i1.patient_id = '$pid' and i1.added_erroneously = 0 ".
-                   " order by administered_date desc";
-                $result = sqlStatement($sql);
-                while ($row=sqlFetchArray($result)) {
-                  // Figure out which name to use (ie. from cvx list or from the custom list)
-                  if ($GLOBALS['use_custom_immun_list']) {
-                     $vaccine_display = generate_display_field(array('data_type'=>'1','list_id'=>'immunizations'), $row['immunization_id']);
-                  }
-                  else {
-                     if (!empty($row['code_text_short'])) {
-                        $vaccine_display = htmlspecialchars( xl($row['code_text_short']), ENT_NOQUOTES);
-                     }
-                     else {
-                        $vaccine_display = generate_display_field(array('data_type'=>'1','list_id'=>'immunizations'), $row['immunization_id']);
-                     }
-                  }
-                  echo $row['administered_date'] . " - " . $vaccine_display;
-                  if ($row['immunization_note']) {
-                     echo " - " . $row['immunization_note'];
-                  }
-                  echo "<br>\n";
-                }
-                echo "</div>\n";
-            }
-
-        // communication report
-        } elseif ($val == "batchcom") {
-
-            echo "<hr />";
-            echo "<div class='text transactions'>\n";
-            print "<h1>".xl('Patient Communication sent').":</h1>";
-            $sql="SELECT concat( 'Messsage Type: ', batchcom.msg_type, ', Message Subject: ', batchcom.msg_subject, ', Sent on:', batchcom.msg_date_sent ) AS batchcom_data, batchcom.msg_text, concat( users.fname, users.lname ) AS user_name FROM `batchcom` JOIN `users` ON users.id = batchcom.sent_by WHERE batchcom.patient_id='$pid'";
-            // echo $sql;
-            $result = sqlStatement($sql);
-            while ($row=sqlFetchArray($result)) {
-                echo $row{'batchcom_data'}.", By: ".$row{'user_name'}."<br>Text:<br> ".$row{'msg_txt'}."<br>\n";
-            }
-            echo "</div>\n";
-
-        } elseif ($val == "notes") {
-
-            echo "<hr />";
-            echo "<div class='text notes'>\n";
-            print "<h1>".xl('Patient Notes').":</h1>";
-            printPatientNotes($pid);
-            echo "</div>";
-
-        } elseif ($val == "transactions") {
-
-            echo "<hr />";
-            echo "<div class='text transactions'>\n";
-            print "<h1>".xl('Patient Transactions').":</h1>";
-            printPatientTransactions($pid);
-            echo "</div>";
-
-        }
-
-    } else {
-
-        // Documents is an array of checkboxes whose values are document IDs.
-        //
-        if ($key == "documents") {
-
+	//documents
             echo "<hr />";
             echo "<div class='text documents'>";
 	    echo "<h1>".xl('Documents')."</h1><br/>";
 	    $category_tree=array();
 	    $ord=array();
+	    $val=$ar['documents'];
             foreach($val as $valkey => $valvalue)
 	    {
   	     $s=sqlQuery("select category_id from categories_to_documents where document_id='".$valvalue."'");
@@ -542,13 +510,9 @@ foreach ($ar as $key => $val) {
                 } // end if-else
             } // end Documents loop
             echo "</div>";
-        }
 
-        // Procedures is an array of checkboxes whose values are procedure order IDs.
-        //
-        else if ($key == "procedures") {
-          if ($auth_med) {
-            echo "<hr />";
+	//procedures
+            /*echo "<hr />";
             echo "<div class='text documents'>";
             foreach($val as $valkey => $poid) {
               echo "<h1>" . xlt('Procedure Order') . ":</h1>";
@@ -558,13 +522,9 @@ foreach ($ar as $key => $val) {
               generate_order_report($poid, false, !$PDF_OUTPUT);
               echo "<br />\n";
             }
-            echo "</div>";
-          }
-        }
+            echo "</div>";*/
 
-        else if (strpos($key, "issue_") === 0) {
-            // display patient Issues
-
+	//issues
             if ($first_issue) {
                 $prevIssueType = 'asdf1234!@#$'; // random junk so as to not match anything
                 $first_issue = 0;
@@ -612,13 +572,15 @@ foreach ($ar as $key => $val) {
 
             echo "</div>\n"; //end the issue DIV
 
-        } else {
+	//encounter forms
             // we have an "encounter form" form field whose name is like
             // dirname_formid, with a value which is the encounter ID.
             //
             // display encounter forms, encoded as a POST variable
             // in the format: <formdirname_formid>=<encounterID>
-
+	   foreach ($ar as $key => $val){
+	    if($key=='documents'||$key=='pdf'||$key=='demographics'||$key=='history'||$key=='insurance'||$key=='billing'||$key=='allergies'||$key=='medications'||$key=='medical_problems'||$key=='immunizations'||$key=='batchcom'||$key=='notes'||$key=='transactions'||$key=='procedures'||strpos($key, "issue_")=== 0)
+	    continue;
             if (($auth_notes_a || $auth_notes || $auth_coding_a || $auth_coding || $auth_med || $auth_relaxed)) {
                 $form_encounter = $val;
                 preg_match('/^(.*)_(\d+)$/', $key, $res);
@@ -682,12 +644,7 @@ foreach ($ar as $key => $val) {
                 print "</div>";
             
             } // end auth-check for encounter forms
-
-        } // end if('issue_')... else...
-
-    } // end if('include_')... else...
-
-} // end $ar loop
+	}
 
 if ($PDF_OUTPUT)
   echo "<br /><br />" . xl('Signature') . ": _______________________________<br />";
@@ -836,8 +793,6 @@ if ($PDF_OUTPUT)
 					<input type='hidden' value='demographics' name='include_demographics'>
 					<input type='hidden' value='history' name='include_history'>
 					<input type='hidden' value='employer' name='include_employer'>
-					<input type='hidden' value='insurance' name='include_insurance'>
-					<input type='hidden' value='billing' name='include_billing'>
 					<input type='hidden' value='allergies' name='include_allergies'>
 					<input type='hidden' value='medications' name='include_medications'>
 					<input type='hidden' value='medical_problems' name='include_medical_problems'>
@@ -845,6 +800,8 @@ if ($PDF_OUTPUT)
 					<input type='hidden' value='notes' name='include_notes'>
 					<input type='hidden' value='transactions' name='include_transactions'>
 					<input type='hidden' value='batchcom' name='include_batchcom'>
+					<input type='hidden' value='insurance' name='include_insurance'>
+					<input type='hidden' value='billing' name='include_billing'>
 					<input type='hidden' value=1 name='pdf'>
                                         <button type="submit" class="btn btn-default">Export</button>
                                     </form>
