@@ -271,6 +271,10 @@ while($result = sqlFetchArray($inclookupres)) {
 	//medical problems
             print "<span style='font-weight:bold;font-size:25px;'>Patient Medical Problems:</span><br>";
             printListData($pid, "medical_problem", "1");
+	    echo "<br/>";
+	//surguries
+            print "<span style='font-weight:bold;font-size:25px;'>Surgeries:</span><br>";
+            printListData($pid, "surgery", "1");
 	//immunizations
                 echo "<hr />";
                 echo "<div class='text immunizations'>\n";
