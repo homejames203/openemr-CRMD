@@ -260,6 +260,10 @@ while($result = sqlFetchArray($inclookupres)) {
                 echo "   </table>\n";
             }
             echo "</div>";
+	//medical problems
+            print "<span style='font-weight:bold;font-size:25px;'>Patient Medical Problems:</span><br>";
+            printListData($pid, "medical_problem", "1");
+	    echo "<br/>";
 	//allergies
             print "<span style='font-weight:bold;font-size:25px;'>Patient Allergies:</span><br>";
             printListData($pid, "allergy", "1");
@@ -268,52 +272,47 @@ while($result = sqlFetchArray($inclookupres)) {
             print "<span style='font-weight:bold;font-size:25px;'>Patient Medications:</span><br>";
             printListData($pid, "medication", "1");
 	    echo "<br/>";
-	//medical problems
-            print "<span style='font-weight:bold;font-size:25px;'>Patient Medical Problems:</span><br>";
-            printListData($pid, "medical_problem", "1");
-	    echo "<br/>";
 	//surguries
-            print "<span style='font-weight:bold;font-size:25px;'>Surgeries:</span><br>";
+            print "<span style='font-weight:bold;font-size:25px;'>Surgeries</span><br>";
             printListData($pid, "surgery", "1");
+	    echo "<br/>";
+	//dental
+	    print "<span style='font-weight:bold;font-size:25px;'>Dental Issues:</span><br>";
+            printListData($pid, "dental", "1");
 	//immunizations
                 echo "<hr />";
                 echo "<div class='text immunizations'>\n";
                 print "<h1>".xl('Patient Immunization').":</h1>";
-                $sql = "select i1.immunization_id, i1.administered_date, substring(i1.note,1,20) as immunization_note, c.code_text_short ".
-                   " from immunizations i1 ".
-                   " left join code_types ct on ct.ct_key = 'CVX' ".
-                   " left join codes c on c.code_type = ct.ct_id AND i1.cvx_code = c.code ".
-                   " where i1.patient_id = '$pid' and i1.added_erroneously = 0 ".
-                   " order by administered_date desc";
+                $sql = "select i1.immunization_id, i1.administered_date, substring(i1.note,1,20) as immunization_note, c.code_text_short from immunizations i1 left join code_types ct on ct.ct_key = 'CVX' left join codes c on c.code_type = ct.ct_id AND i1.cvx_code = c.code where i1.patient_id = '$pid' and i1.added_erroneously = 0 order by administered_date desc";
                 $result = sqlStatement($sql);
-                while ($row=sqlFetchArray($result)) {
+                while($row=sqlFetchArray($result))
+		{
                   // Figure out which name to use (ie. from cvx list or from the custom list)
-                  if ($GLOBALS['use_custom_immun_list']) {
+                  if ($GLOBALS['use_custom_immun_list'])
+                  $vaccine_display = generate_display_field(array('data_type'=>'1','list_id'=>'immunizations'), $row['immunization_id']);
+                  else
+		  {
+                     if(!empty($row['code_text_short']))
+                     $vaccine_display = htmlspecialchars( xl($row['code_text_short']), ENT_NOQUOTES);
+                     else
                      $vaccine_display = generate_display_field(array('data_type'=>'1','list_id'=>'immunizations'), $row['immunization_id']);
                   }
-                  else {
-                     if (!empty($row['code_text_short'])) {
-                        $vaccine_display = htmlspecialchars( xl($row['code_text_short']), ENT_NOQUOTES);
-                     }
-                     else {
-                        $vaccine_display = generate_display_field(array('data_type'=>'1','list_id'=>'immunizations'), $row['immunization_id']);
-                     }
-                  }
                   echo $row['administered_date'] . " - " . $vaccine_display;
-                  if ($row['immunization_note']) {
-                     echo " - " . $row['immunization_note'];
-                  }
+                  if($row['immunization_note'])
+                  echo " - " . $row['immunization_note'];
                   echo "<br>\n";
                 }
                 echo "</div>\n";
+		echo "<br/>";
 	//encounter forms
             // we have an "encounter form" form field whose name is like
             // dirname_formid, with a value which is the encounter ID.
             //
             // display encounter forms, encoded as a POST variable
             // in the format: <formdirname_formid>=<encounterID>
+           echo "<h1>Encounters</h1>";
 	   foreach ($ar as $key => $val){
-	    if($key=='documents'||$key=='pdf'||$key=='demographics'||$key=='history'||$key=='insurance'||$key=='billing'||$key=='allergies'||$key=='medications'||$key=='medical_problems'||$key=='immunizations'||$key=='batchcom'||$key=='notes'||$key=='transactions'||$key=='procedures'||strpos($key, "issue_")=== 0)
+	    if($key=='documents'||$key=='pdf'||$key=='include_demographics'||$key=='include_history'||$key=='include_employer'||$key=='include_insurance'||$key=='include_billing'||$key=='include_allergies'||$key=='include_medications'||$key=='include_medical_problems'||$key=='include_immunizations'||$key=='include_batchcom'||$key=='include_notes'||$key=='include_transactions'||$key=='procedures'||strpos($key, "issue_")=== 0||$key=='pdf_type'||$key=='patient'||$key=='starting_patient'||$key=='ending_patient')
 	    continue;
             if (($auth_notes_a || $auth_notes || $auth_coding_a || $auth_coding || $auth_med || $auth_relaxed)) {
                 $form_encounter = $val;
@@ -333,12 +332,9 @@ while($result = sqlFetchArray($inclookupres)) {
                 }
 
                 // show the encounter's date
-                echo "(" . oeFormatSDFT(strtotime($dateres["date"])) . ") ";
-                if ($res[1] == 'newpatient') {
-                    // display the provider info
-                    echo ' '. xl('Provider') . ': ' . text(getProviderName(getProviderIdOfEncounter($form_encounter)));
-                }
-                echo "<br>\n";
+		echo "(" . oeFormatSDFT(strtotime($dateres["date"])) . ") ";
+                if ($res[1] == 'newpatient')
+                echo ' '. xl('Provider') . ': ' . text(getProviderName(getProviderIdOfEncounter($form_encounter)));
    
                 // call the report function for the form
                 ?>                
