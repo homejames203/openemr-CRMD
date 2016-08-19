@@ -73,8 +73,8 @@ class smtp_class
 	{
 		$message.="\n";
 		if($this->html_debug)
-			$message=str_replace("\n","<br />\n",HtmlEntities($message));
-		echo $message;
+		$message=str_replace("\n","<br />\n",HtmlEntities($message));
+		//echo $message;
 		flush();
 	}
 

@@ -312,7 +312,7 @@ while($result = sqlFetchArray($inclookupres)) {
             // in the format: <formdirname_formid>=<encounterID>
            echo "<h1>Encounters</h1>";
 	   foreach ($ar as $key => $val){
-	    if($key=='documents'||$key=='pdf'||$key=='include_demographics'||$key=='include_history'||$key=='include_employer'||$key=='include_insurance'||$key=='include_billing'||$key=='include_allergies'||$key=='include_medications'||$key=='include_medical_problems'||$key=='include_immunizations'||$key=='include_batchcom'||$key=='include_notes'||$key=='include_transactions'||$key=='procedures'||strpos($key, "issue_")=== 0||$key=='pdf_type'||$key=='patient'||$key=='starting_patient'||$key=='ending_patient')
+	    if($key=='documents'||$key=='pdf'||$key=='include_demographics'||$key=='include_history'||$key=='include_employer'||$key=='include_insurance'||$key=='include_billing'||$key=='include_allergies'||$key=='include_medications'||$key=='include_medical_problems'||$key=='include_immunizations'||$key=='include_batchcom'||$key=='include_notes'||$key=='include_transactions'||$key=='procedures'||strpos($key, "issue_")=== 0||$key=='pdf_type'||$key=='patient'||$key=='starting_patient'||$key=='ending_patient'||$key=='email')
 	    continue;
             if (($auth_notes_a || $auth_notes || $auth_coding_a || $auth_coding || $auth_med || $auth_relaxed)) {
                 $form_encounter = $val;
@@ -700,9 +700,12 @@ if ($PDF_OUTPUT)
  header('location: backup.zip');
  elseif(is_file("../backup/$pid.pdf"))
  {
-  header("Content-type:application/pdf");
+  /*header("Content-type:application/pdf");
   header("Content-Disposition:attachment;filename=$pid.pdf");
-  readfile("../backup/$pid.pdf");
+  readfile("../backup/$pid.pdf");*/
+  $smtp=sqlQuery("select gl_value from globals where gl_name='SMTP_USER'");
+  require_once("../modules/sms_email_reminder/cron_functions_email.php");
+  $mail=campaign_SendMail($_REQUEST['email'], 'Patient Pdf', 'Patient Pdf', $smtp['gl_value'], array("$pid.pdf"), '../backup/', array(), '');
  }
 }
 ?>
@@ -777,6 +780,10 @@ if ($PDF_OUTPUT)
                                           <select class="form-control" name='patient'>
 					   <?php echo $s1; ?>
 					  </select>
+                                        </div>
+                                        <div class="form-group single">
+                                          <label>Email</label>
+                                          <input type='text' class="form-control" name='email'>
                                         </div>
                                         <div class="form-group batch">
                                           <label>Starting Patient</label>
