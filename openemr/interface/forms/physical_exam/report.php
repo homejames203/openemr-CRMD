@@ -19,7 +19,7 @@ function physical_exam_report($pid, $encounter, $cols, $id) {
   $rows[$row['line_id']] = $row;
  }
 
- echo "<table cellpadding='0' cellspacing='0'>\n";
+ echo "<table cellpadding='0' cellspacing='0' style='display:block;width:100%'>\n";
 
  foreach ($pelines as $sysname => $sysarray) {
   $sysnamedisp = xl($sysname);
@@ -29,19 +29,19 @@ function physical_exam_report($pid, $encounter, $cols, $id) {
     $linedbrow['comments'])) continue;
    if ($sysname != '*') { // observation line
     echo " <tr>\n";
-    echo "  <td class='text' align='center'>" . ($linedbrow['wnl'] ? "WNL" : "") . "&nbsp;&nbsp;</td>\n";
-    echo "  <td class='text' align='center'>" . ($linedbrow['abn'] ? "ABN1" : "") . "&nbsp;&nbsp;</td>\n";
-    echo "  <td class='text' nowrap>$sysnamedisp&nbsp;&nbsp;</td>\n";
-    echo "  <td class='text' nowrap>$description&nbsp;&nbsp;</td>\n";
-    echo "  <td class='text'>" . $linedbrow['diagnosis'] . "&nbsp;&nbsp;</td>\n";
-    echo "  <td class='text'>" . htmlentities($linedbrow['comments']) . "</td>\n";
+    echo "  <td class='text' align='center' style='width:".(100/6)."%'>" . ($linedbrow['wnl'] ? "WNL" : "") . "&nbsp;&nbsp;</td>\n";
+    echo "  <td class='text' align='center' style='width:".(100/6)."%'>" . ($linedbrow['abn'] ? "ABN1" : "") . "&nbsp;&nbsp;</td>\n";
+    echo "  <td class='text' nowrap style='width:".(100/6)."%'>$sysnamedisp&nbsp;&nbsp;</td>\n";
+    echo "  <td class='text' nowrap style='width:".(100/6)."%'>$description&nbsp;&nbsp;</td>\n";
+    echo "  <td class='text' style='width:".(100/6)."%'>" . $linedbrow['diagnosis'] . "&nbsp;&nbsp;</td>\n";
+    echo "  <td class='text' style='width:".(100/6)."%'>" . htmlentities($linedbrow['comments']) . "</td>\n";
     echo " </tr>\n";
    } else { // treatment line
     echo " <tr>\n";
-    echo "  <td class='text' align='center'>" . ($linedbrow['wnl'] ? "Y" : "") . "&nbsp;&nbsp;</td>\n";
-    echo "  <td class='text' align='center'>&nbsp;&nbsp;</td>\n";
-    echo "  <td class='text' colspan='2' nowrap>$description&nbsp;&nbsp;</td>\n";
-    echo "  <td class='text' colspan='2'>" . htmlentities($linedbrow['comments']) . "</td>\n";
+    echo "  <td class='text' align='center' style='width:25%'>" . ($linedbrow['wnl'] ? "Y" : "") . "&nbsp;&nbsp;</td>\n";
+    echo "  <td class='text' align='center' style='width:25%'>&nbsp;&nbsp;</td>\n";
+    echo "  <td class='text' colspan='2' nowrap style='width:25%'>$description&nbsp;&nbsp;</td>\n";
+    echo "  <td class='text' colspan='2' style='width:25%'>" . htmlentities($linedbrow['comments']) . "</td>\n";
     echo " </tr>\n";
    }
    $sysnamedisp = '';

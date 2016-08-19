@@ -22,7 +22,7 @@ function note_report( $pid, $encounter, $cols, $id) {
     $count = 0;
     $data = formFetch("form_note", $id);
     if ($data) {
-        print "<table><tr>";
+        print "<table style='display:block;width:100%'><tr>";
         foreach($data as $key => $value) {
             if ($key == "id" || 
                 $key == "pid" || 

@@ -5,7 +5,7 @@ function vitalsM_report( $pid, $encounter, $cols, $id) {
   $count = 0;
   $data = formFetch("form_vitalsM", $id);
   if ($data) {
-    print "<table><tr>";
+    print "<table style='display:block;width:100%'><tr>";
     foreach($data as $key => $value) {
       if ($key == "id" || $key == "pid" || $key == "user" ||
         $key == "groupname" || $key == "authorized" || $key == "activity" ||

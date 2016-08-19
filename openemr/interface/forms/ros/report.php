@@ -10,7 +10,7 @@ function ros_report( $pid, $encounter, $cols, $id) {
     $data = formFetch("form_ros", $id);
 
     if ($data) {
-        print "<div id='form_ros_values'><table class='report_results'><tr>";
+        print "<div id='form_ros_values'><table class='report_results' style='display:block;width:100%'><tr>";
     
         foreach($data as $key => $value) {
             if ($key == "id" || $key == "pid" || $key == "user" || $key == "groupname" || $key == "activity" ||
@@ -78,7 +78,7 @@ function ros_report( $pid, $encounter, $cols, $id) {
 	    if ($key == "Hai Status") { $key = "HAI Status"; }
 	    
 	    //modified by BM 07-2009 for internationalization
-	    print "<td><span class=bold>" . xl($key) . ": </span><span class=text>" . xl($value) . "</span></td>";
+	    print "<td style='width:".(100/$cols)."%'><span class=bold>" . xl($key) . ": </span><span class=text>" . xl($value) . "</span></td>";
             $count++;
             
             if ($count == $cols) {

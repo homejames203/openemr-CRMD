@@ -83,7 +83,7 @@ $lists = array();
     $data = formFetch($table_name, $id);
     if ($data) {
 
-        echo '<table><tr>';
+        echo '<table style="display:block;width:100%"><tr>';
 
         foreach($data as $key => $value) {
             if ($key == 'id' || $key == 'pid' || $key == 'user' ||
@@ -117,7 +117,7 @@ $lists = array();
             $key=ucwords(str_replace('_',' ',$key));
             $mykey = $key;
             $myval = $value;
-            echo '<td><span class=bold>'.xl("$mykey").': </span><span class=text>'.xl("$myval").'</span></td>';
+            echo '<td style="width:'.(100/$cols).'%"><span class=bold>'.xl("$mykey").': </span><span class=text>'.xl("$myval").'</span></td>';
 
 
             $count++;
