@@ -20,10 +20,10 @@ function vitalsM_report( $pid, $encounter, $cols, $id) {
       $key = ucwords(str_replace("_"," ",$key));
       //modified by BM 06-2009 for internationalization
       if ($key == "Temp Method" || $key == "BMI Status") {
-       print "<td><span class=bold>" . xl($key) . ": </span><span class=text>" . xl($value) . "</span></td>";
+       print "<td style='width:50%'><span class=bold>" . xl($key) . ": </span><span class=text>" . xl($value) . "</span></td>";
       }
       else {
-       print "<td><span class=bold>" . xl($key) . ": </span><span class=text>$value</span></td>";
+       print "<td style='width:50%'><span class=bold>" . xl($key) . ": </span><span class=text>$value</span></td>";
       }
       $count++;
       if ($count == $cols) {

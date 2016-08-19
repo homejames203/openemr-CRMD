@@ -104,7 +104,7 @@ $lists = array();
             $key=ucwords(str_replace('_',' ',$key));
             $mykey = $key;
             $myval = $value;
-            echo '<td style="width:'.(100/$cols).'%"><span class=bold>'.xl("$mykey").': </span><span class=text>'.xl("$myval").'</span></td>';
+            echo '<td style="width:'.(100/($cols>1?$cols:2)).'%"><span class=bold>'.xl("$mykey").': </span><span class=text>'.xl("$myval").'</span></td>';
 
 
             $count++;

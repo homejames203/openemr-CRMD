@@ -16,7 +16,7 @@ function fee_sheet_report( $pid, $encounter, $cols, $id) {
 			}
 
 			$key=ucwords(str_replace("_"," ",$key));
-			print "<td style='width:".(100/$cols)."%'><span class=bold>$key: </span><span class=text>$value</span></td>";
+			print "<td style='width:".(100/($cols>1?$cols:2))."%'><span class=bold>$key: </span><span class=text>$value</span></td>";
 			$count++;
 			if ($count == $cols) {
 				$count = 0;

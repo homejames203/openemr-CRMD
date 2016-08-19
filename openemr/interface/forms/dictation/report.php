@@ -18,7 +18,7 @@ function dictation_report( $pid, $encounter, $cols, $id) {
         $value = "yes";
       }
       $key=ucwords(str_replace("_"," ",$key));
-      print "<td style='width:".(100/$cols)."%'><span class=bold>" . xlt($key) . ": </span><span class=text>" .
+      print "<td style='width:".(100/($cols>1?$cols:2))."%'><span class=bold>" . xlt($key) . ": </span><span class=text>" .
         nl2br(text($value)) . "</span></td>";
       $count++;
       if ($count == $cols) {

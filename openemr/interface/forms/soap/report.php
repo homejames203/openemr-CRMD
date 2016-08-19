@@ -17,7 +17,7 @@ function soap_report( $pid, $encounter, $cols, $id) {
     $value = "yes";
    }
    $key=ucwords(str_replace("_"," ",$key));
-   print "<td style='width:".(100/$cols)."%'><span class=bold>" . xl($key) . ": </span><span class=text>" . text($value) . "</span></td>";
+   print "<td style='width:".(100/($cols>1?$cols:2))."%'><span class=bold>" . xl($key) . ": </span><span class=text>" . text($value) . "</span></td>";
    $count++;
    if ($count == $cols) {
     $count = 0;

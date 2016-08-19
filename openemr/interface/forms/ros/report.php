@@ -78,7 +78,7 @@ function ros_report( $pid, $encounter, $cols, $id) {
 	    if ($key == "Hai Status") { $key = "HAI Status"; }
 	    
 	    //modified by BM 07-2009 for internationalization
-	    print "<td style='width:".(100/$cols)."%'><span class=bold>" . xl($key) . ": </span><span class=text>" . xl($value) . "</span></td>";
+	    print "<td style='width:".(100/($cols>1?$cols:2))."%'><span class=bold>" . xl($key) . ": </span><span class=text>" . xl($value) . "</span></td>";
             $count++;
             
             if ($count == $cols) {
