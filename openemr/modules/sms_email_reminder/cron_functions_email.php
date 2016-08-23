@@ -4,7 +4,7 @@
 // scripts to notify events
 ////////////////////////////////////////////////////////////////////
 
-require_once(basename(__DIR__)."/../../interface/globals.php");
+require_once(__DIR__."/../../interface/globals.php");
 
 ////////////////////////////////////////////////////////////////////
 // Function:	cron_SendMail
@@ -266,8 +266,8 @@ function campaign_SendMail( $to, $subject, $vBody, $from, $attachments, $path, $
 
 		if( !class_exists( "smtp_class" ) )
 		{
-			require_once(basename(__DIR__)."/../../library/classes/smtp/smtp.php");
-			require_once(basename(__DIR__)."/../../library/classes/smtp/sasl.php");
+			require_once(__DIR__."/../../library/classes/smtp/smtp.php");
+			require_once(__DIR__."/../../library/classes/smtp/sasl.php");
 		}
 
 		$strFrom = $from;
