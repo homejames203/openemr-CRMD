@@ -188,8 +188,13 @@ $first_issue = 1;
 <div id="report_custom" style="width:100%;">  <!-- large outer DIV -->
 
 <?php
-if (sizeof($_GET) > 0) { $ar = $_GET; }
-else { $ar = $_POST; }
+$ar=array();
+$ar=array_merge($ar,$_GET);
+$ar=array_merge($ar,$_POST);
+
+
+//if (sizeof($_GET) > 0) { $ar = $_GET; }
+//else { $ar = $_POST; }
 
 if ($PDF_OUTPUT) {
   /*******************************************************************
